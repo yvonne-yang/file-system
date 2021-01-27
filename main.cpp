@@ -15,13 +15,10 @@
 #include <unordered_map>
 
 #include "StorageSpace.h"
-#include "StorageFragment.h"
 #include "globals.h"
 
 /* Global variables */
-const int STORAGE = 1024; // in KiB
-const int BLOCK_SIZE = 1; // in KiB
-std::unordered_map<std::string, StorageFragment> storageManager;
+std::unordered_map<std::string, std::vector<std::pair<int, int>>> fileLoopUp;
 
 /* Functions */
 bool saveFile(std::string fileID, int bytes);
