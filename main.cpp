@@ -12,11 +12,16 @@
 #include <sstream>
 #include <iomanip>
 #include <string>
+#include <unordered_map>
+
 #include "StorageSpace.h"
+#include "StorageFragment.h"
+#include "globals.h"
 
 /* Global variables */
-const int storage = 1024; // in KiB
-const int block_size = 1; // in KiB
+const int STORAGE = 1024; // in KiB
+const int BLOCK_SIZE = 1; // in KiB
+std::unordered_map<std::string, StorageFragment> storageManager;
 
 /* Functions */
 bool saveFile(std::string fileID, int bytes);
@@ -68,7 +73,7 @@ int main()
         std::stringstream lineStream(line);
         lineStream >> cmd;
 
-        /* Process user input */
+        /* Process user input and check if the command is valid */
         if (cmd == "exit")
         {
             std::cout << "Thank you for using Yvonne's file system." << std::endl;
