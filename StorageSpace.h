@@ -15,10 +15,15 @@
 
 #pragma once
 
-#include <tuple>
-#include <array>
+#include <vector>
+#include <utility>
+
 #include "StorageFragment.h"
 #include "globals.h"
+
+typedef std::pair<int, int> fragment_t;      // a start and an end index define\
+                                         // a fragment
+typedef std::vector<fragment_t> spaceList_t; // a list of spaces
 
 class StorageSpace
 {
@@ -43,8 +48,11 @@ class StorageSpace
 public:
     StorageSpace();
     ~StorageSpace();
-    bool insertSpace(int start, int end);
-    bool deleteSpace(int start, int end);
+    bool insertSpace(spaceList_t);
+    spaceList_t findSpace(int bytes, int start);
+    bool deleteSpace(spaceList_t);
+    bool startOfFrag(int index);
+    int getTotalFragments();
     bool isFull();
     void printFreeSpace();
 };

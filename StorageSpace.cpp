@@ -11,7 +11,7 @@
  * pointers to the index of other blocks. This helps divide the memory into
  * free/occupied sections and chains similar sections for easier access.
  * 
- * TODO: insertSpace, deleteSpace 
+ * TODO: insertSpace, findSpace, deleteSpace 
  * */
 #include <iostream>
 
@@ -60,22 +60,48 @@ StorageSpace::~StorageSpace()
     delete[] listOfBlocks;
 }
 
+/* Accessors */
+int StorageSpace::getTotalFragments() { return totalFreeFragments; }
 bool StorageSpace::isFull() { return full; }
+bool StorageSpace::startOfFrag(int index) { return (listOfBlocks[index]->free && (listOfBlocks[index]->next > index)); }
 
-bool StorageSpace::insertSpace(int start, int end)
+/* @return True if no space can be inserted (internal error). */
+bool StorageSpace::insertSpace(spaceList_t spaceList)
 {
+
+    return false;
 }
 
-bool StorageSpace::deleteSpace(int start, int end)
+/* @return A list of spaces that can be occupied by a file of size bytes
+ * (in bytes, obviously), starting from the index [start]. */
+spaceList_t StorageSpace::findSpace(int bytes, int start)
 {
+    int blocks = (double)bytes / 1024.0 / BLOCK_SIZE;
+    spaceList_t list;
+
+    return list;
 }
 
+/* @return True if the range (start, end) is not free space */
+bool StorageSpace::deleteSpace(spaceList_t spaceList)
+{
+
+    // update variables: firstFreeBlock, lastFreeBlock, totalFree, full
+    return false;
+}
+
+/* 
+ * extra feature: number fragments for easier user input
+ * */
 void StorageSpace::printFreeSpace()
 {
-    auto iter = listOfBlocks[firstFreeBlock];
-    while (iter != listOfBlocks[lastFreeBlock])
+    // int count = 1; // give each fragment an index so that it's easier for the user
+    auto i = firstFreeBlock;
+    while (i != lastFreeBlock)
     {
-        std::cout << iter << ".." << iter->next << std::endl;
-        iter = listOfBlocks[listOfBlocks[iter->next]->next];
+        // std::cout << "Fragment " << count << ": ";
+        std::cout << i << ".." << listOfBlocks[i]->next << std::endl;
+        i = listOfBlocks[listOfBlocks[i]->next]->next;
+        // count++;
     }
 }
