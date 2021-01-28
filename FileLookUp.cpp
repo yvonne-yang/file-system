@@ -9,6 +9,7 @@
  * */
 #include <vector>
 #include <utility>
+#include <iostream>
 
 #include "FileLookUp.h"
 
@@ -17,14 +18,27 @@ FileLookUp::FileLookUp()
     totalFiles = 0;
 }
 
+/* Finds the address of a file with id [fileID].
+ * @return The list of fragments where the file is stored */
 std::vector<fragment_t> FileLookUp::findFile(fileID_t fileID)
 {
     auto file = table.find(fileID);
     return file->second;
 }
 
+/* Logs a file into the lookup table */
 void FileLookUp::saveFile(fileID_t fileID, std::vector<fragment_t> fragments)
 {
     std::pair<fileID_t, std::vector<fragment_t>> file(fileID, fragments);
     table.insert(file);
+}
+
+/* Prints the addresses of a file. */
+void FileLookUp::printFileAddress(fileID_t fileID)
+{
+    auto fragList = findFile(fileID);
+    for (auto frag : fragList)
+    {
+        std::cout << frag.first << ".." << frag.second << std::endl;
+    }
 }

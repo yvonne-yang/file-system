@@ -16,17 +16,19 @@
 #include <unordered_map>
 #include <vector>
 
-typedef std::pair<int, int> fragment_t; // a start and an end index define\
+typedef std::pair<int, int> fragment_t;     // a start and an end index define\
                                         // a storage fragment
+typedef std::vector<fragment_t> fragList_t; // fragment list
 typedef std::string fileID_t;
 
 class FileLookUp
 {
     std::unordered_map<fileID_t, std::vector<fragment_t>> table;
+    int totalFiles;
 
 public:
-    int totalFiles;
     FileLookUp();
-    std::vector<fragment_t> findFile(fileID_t fileID);
-    void saveFile(fileID_t fileID, std::vector<fragment_t>);
+    fragList_t findFile(fileID_t fileID);
+    void saveFile(fileID_t fileID, fragList_t);
+    void printFileAddress(fileID_t fileID);
 };
