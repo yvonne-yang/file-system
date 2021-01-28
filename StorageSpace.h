@@ -31,22 +31,20 @@ class StorageSpace
     public:
         bool free;
         int prev, next;
+
         BlockInfo();
         BlockInfo(bool, int, int);
-        bool free();
-        int prev();
-        int next();
-        void setAsFree(bool);
-        void setPrev(int);
-        void setNext(int);
     };
 
-    int firstFreeBlock;
-    std::array<BlockInfo, NUM_BLOCKS> listOfBlocks;
+    int firstFreeBlock, lastFreeBlock, totalFreeFragments;
+    bool full;
+    BlockInfo **listOfBlocks; // array of pointers to BlockInfo
 
 public:
     StorageSpace();
+    ~StorageSpace();
     bool insertSpace(int start, int end);
     bool deleteSpace(int start, int end);
+    bool isFull();
     void printFreeSpace();
 };

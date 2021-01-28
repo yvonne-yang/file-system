@@ -11,14 +11,14 @@
  * pointers to the index of other blocks. This helps divide the memory into
  * free/occupied sections and chains similar sections for easier access.
  * 
- * TODO: insertSpace, deleteSpace, printFreeSpace
+ * TODO: insertSpace, deleteSpace 
  * */
-#include <tuple>
+#include <iostream>
 
 #include "StorageSpace.h"
 
 /* Implementation of inner class BlockInfo */
-StorageSpace::BlockInfo::BlockInfo()
+StorageSpace::BlockInfo::BlockInfo() // all blocks are free and point to nothing initially
 {
     free = false;
     prev = NULLI;
@@ -32,37 +32,50 @@ StorageSpace::BlockInfo::BlockInfo(bool f, int p, int n)
     next = n;
 }
 
-bool StorageSpace::BlockInfo::free() { return free; }
-int StorageSpace::BlockInfo::prev() { return prev; }
-int StorageSpace::BlockInfo::next() { return next; }
-
-void StorageSpace::BlockInfo::setAsFree(bool f)
-{
-    free = f;
-}
-void StorageSpace::BlockInfo::setPrev(int p)
-{
-    prev = p;
-}
-void StorageSpace::BlockInfo::setNext(int n)
-{
-    next = n;
-}
-
 StorageSpace::StorageSpace()
 {
     firstFreeBlock = 0;
+    lastFreeBlock = NUM_BLOCKS - 1;
+    totalFreeFragments = 1;
+    full = false;
 
-    listOfBlocks.fill(std::make_tuple(true, NULLI, NULLI));         // initialize all blocks
-    listOfBlocks[0] = std::make_tuple(true, NULLI, NUM_BLOCKS - 1); // link the first block to the last
-    listOfBlocks[NUM_BLOCKS] = std::make_tuple(true, 0, NULLI);     // and the last block to the first
+    listOfBlocks = new BlockInfo *[NUM_BLOCKS];
+
+    // initialize all blocks
+    for (int i = 0; i < NUM_BLOCKS; i++)
+    {
+        listOfBlocks[i] = new BlockInfo(); // all blocks are free and point to nothing initially
+    }
+
+    listOfBlocks[0]->next = NUM_BLOCKS - 1; // link the first block to the last
+    listOfBlocks[NUM_BLOCKS - 1]->prev = 0; // and the last block to the first
 }
 
-bool StorageSpace::insertSpace(int start, int end) {}
+StorageSpace::~StorageSpace()
+{
+    for (int i = 0; i < NUM_BLOCKS; i++)
+    {
+        delete listOfBlocks[i];
+    }
+    delete[] listOfBlocks;
+}
 
-bool StorageSpace::deleteSpace(int start, int end) {}
+bool StorageSpace::isFull() { return full; }
+
+bool StorageSpace::insertSpace(int start, int end)
+{
+}
+
+bool StorageSpace::deleteSpace(int start, int end)
+{
+}
 
 void StorageSpace::printFreeSpace()
 {
     auto iter = listOfBlocks[firstFreeBlock];
+    while (iter != listOfBlocks[lastFreeBlock])
+    {
+        std::cout << iter << ".." << iter->next << std::endl;
+        iter = listOfBlocks[listOfBlocks[iter->next]->next];
+    }
 }
