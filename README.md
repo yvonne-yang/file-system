@@ -14,7 +14,8 @@ The StorageSpace class is an ingenious creation tailored to solve this problem. 
  
 
 ## To run
-Download the file-system.exe file and use the console for input. Follow instructions in the help manu.
+Download the source code and use `g++ -Wall main.cpp StorageSpace.cpp FileLookUp.cpp -o file-system.exe` to generate the executable.
+Run the executable and use the console for input. Follow instructions in the help menu.
 
 
 ## Features that can be added
