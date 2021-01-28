@@ -1,6 +1,6 @@
 /*
  * Yvonne Yang
- * 01/26/2021
+ * 01/28/2021
  * 
  * Declaration file.
  * This custom-built data structure is a hybrid between an array and a linked 
@@ -20,9 +20,9 @@
 
 #include "globals.h"
 
-typedef std::pair<int, int> fragment_t;      // a start and an end index define
-                                             // a fragment
-typedef std::vector<fragment_t> spaceList_t; // a list of spaces
+typedef std::pair<int, int> fragment_t;     // a start and an end index define
+                                            // a fragment
+typedef std::vector<fragment_t> fragList_t; // a list of spaces
 
 class StorageSpace
 {
@@ -38,6 +38,7 @@ class StorageSpace
 
         BlockInfo();
         BlockInfo(bool, int, int);
+        void reset();
     };
 
     int firstFreeBlock, lastFreeBlock, totalFreeFragments, totalFreeBlocks;
@@ -47,9 +48,9 @@ class StorageSpace
 public:
     StorageSpace();
     ~StorageSpace();
-    bool insertSpace(spaceList_t);
-    spaceList_t findSpace(int bytes, int start);
-    bool deleteSpace(spaceList_t);
+    bool freeUpSpace(fragList_t);
+    fragList_t findSpace(int bytes, int start);
+    bool occupySpace(fragList_t);
     bool startOfFrag(int index);
     int getTotalFreeBlocks();
     int getTotalFragments();

@@ -1,9 +1,11 @@
 /*
  * Yvonne Yang
- * Jan 24, 2021
+ * Jan 24-28, 2021
  * 
  * A simplified file system model that supports 3 operations, 
- * save, delete and read. See ReadMe.md for details.
+ * save, delete and read. 
+ * 
+ * Please read the ReadMe.md.
  * 
  * To compile:
  * g++ -Wall main.cpp StorageSpace.cpp FileLookUp.cpp -o file-system.exe
@@ -39,11 +41,11 @@ void help();
 bool saveFile(std::string fileID, int bytes)
 {
     /* Step 1: print list of available spaces */
-    std::cout << "Current free fragments of memory: " << std::endl;
+    std::cout << "Current free memory blocks: " << std::endl;
     storageSpace.printFreeSpace();
 
     /* Step 2: ask for input on the interval of choice */
-    std::cout << "Enter the starting index of a free fragment that you would like to write to (eg. 27):" << std::endl;
+    std::cout << "Enter the starting index of a free fragment that you would like to write to (eg. 27 for 27..100):" << std::endl;
     std::cout << "> ";
     // basic input validation
     int start = 0;
@@ -80,7 +82,7 @@ bool saveFile(std::string fileID, int bytes)
     // save file in fileLookUp
     fileLookUp.saveFile(fileID, listOfSpaces);
     // update the free storage
-    /////////////// deleteSpace(listOfSpaces); // mark those spaces as occupied
+    storageSpace.occupySpace(listOfSpaces); // mark those spaces as occupied
 
     std::cout << "File successfully saved." << std::endl;
     return false;
@@ -88,7 +90,10 @@ bool saveFile(std::string fileID, int bytes)
 
 bool deleteFile(std::string fileID)
 {
-
+    // delete from fileLookUp
+    auto fragList = fileLookUp.deleteFile(fileID);
+    // free up space in storage
+    storageSpace.freeUpSpace(fragList);
     std::cout << "File successfully deleted." << std::endl;
     return false;
 }

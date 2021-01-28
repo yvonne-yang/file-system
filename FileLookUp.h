@@ -31,6 +31,6 @@ public:
     bool contains(fileID_t fileID);
     fragList_t findFile(fileID_t fileID);
     void saveFile(fileID_t fileID, fragList_t);
-    void deleteFile(fileID_t fileID);
+    fragList_t deleteFile(fileID_t fileID);
     void printFileAddress(fileID_t fileID);
 };

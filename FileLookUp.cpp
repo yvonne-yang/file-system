@@ -41,11 +41,13 @@ void FileLookUp::saveFile(fileID_t fileID, fragList_t fragments)
 }
 
 /* Deletes a file from the lookup table */
-void FileLookUp::deleteFile(fileID_t fileID)
+fragList_t FileLookUp::deleteFile(fileID_t fileID)
 {
     auto file = table.find(fileID);
+    auto fragList = file->second;
     table.erase(file);
     totalFiles--;
+    return fragList;
 }
 /* Prints the addresses of a file. */
 void FileLookUp::printFileAddress(fileID_t fileID)
