@@ -20,7 +20,7 @@
 /* Implementation of inner class BlockInfo */
 StorageSpace::BlockInfo::BlockInfo() // all blocks are free and point to nothing initially
 {
-    free = false;
+    free = true;
     prev = NULLI;
     next = NULLI;
 }
@@ -65,7 +65,12 @@ StorageSpace::~StorageSpace()
 int StorageSpace::getTotalFragments() { return totalFreeFragments; }
 int StorageSpace::getTotalFreeBlocks() { return totalFreeBlocks; }
 bool StorageSpace::isFull() { return full; }
-bool StorageSpace::startOfFrag(int index) { return (listOfBlocks[index]->free && (listOfBlocks[index]->next > index)); }
+bool StorageSpace::startOfFrag(int index)
+{
+    if (index < 0 || index >= NUM_BLOCKS) // index out of bounds
+        return false;
+    return (listOfBlocks[index]->free && (listOfBlocks[index]->next > index));
+}
 
 /* @return True if no space can be inserted (internal error). */
 bool StorageSpace::insertSpace(spaceList_t spaceList)
@@ -128,7 +133,10 @@ void StorageSpace::printFreeSpace()
     {
         // std::cout << "Fragment " << count << ": ";
         std::cout << i << ".." << listOfBlocks[i]->next << std::endl;
-        i = listOfBlocks[listOfBlocks[i]->next]->next;
+        if (listOfBlocks[i]->next != lastFreeBlock)
+            i = listOfBlocks[listOfBlocks[i]->next]->next;
+        else
+            i = listOfBlocks[i]->next;
         // count++;
     }
 }

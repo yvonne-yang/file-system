@@ -18,11 +18,10 @@
 #include <vector>
 #include <utility>
 
-#include "StorageFragment.h"
 #include "globals.h"
 
-typedef std::pair<int, int> fragment_t;      // a start and an end index define\
-                                         // a fragment
+typedef std::pair<int, int> fragment_t;      // a start and an end index define
+                                             // a fragment
 typedef std::vector<fragment_t> spaceList_t; // a list of spaces
 
 class StorageSpace

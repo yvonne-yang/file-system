@@ -6,13 +6,14 @@
  * save, delete and read. See ReadMe.md for details.
  * 
  * To compile:
- * g++ -Wall main.cpp StorageSpace.cpp -o file-system.exe
+ * g++ -Wall main.cpp StorageSpace.cpp FileLookUp.cpp -o file-system.exe
  */
 #include <iostream>
 #include <sstream>
 #include <iomanip>
 #include <string>
 #include <unordered_map>
+#include <cmath>
 
 #include "StorageSpace.h"
 #include "FileLookUp.h"
@@ -33,37 +34,53 @@ void help();
  * they would like to store the file. The file with ID [fileID] that has [size]
  * number of bytes will then be saved into the file system.
  * 
- * @return True if error-storage is full.
+ * @return True if error--there is not enough memory.
  * */
 bool saveFile(std::string fileID, int bytes)
 {
     /* Step 1: print list of available spaces */
+    std::cout << "Current free fragments of memory: " << std::endl;
     storageSpace.printFreeSpace();
 
     /* Step 2: ask for input on the interval of choice */
-    std::cout << "Enter the starting index of a fragment that you would like to write to (eg. 0):" << std::endl;
-    // basic validation
+    std::cout << "Enter the starting index of a free fragment that you would like to write to (eg. 27):" << std::endl;
+    std::cout << "> ";
+    // basic input validation
     int start = 0;
     std::cin >> start;
-    if (std::cin.fail())
+    if (std::cin.fail()) // invalid input type
     {
         std::cout << "Invalid input." << std::endl;
+        std::cin.clear();
+        std::cin.ignore(INT_MAX, '\n');
         return false;
     }
-    else if (!storageSpace.startOfFrag(start))
+    else if (!storageSpace.startOfFrag(start)) // not a start of any fragment
     {
         std::cout << "Invalid starting index." << std::endl;
+        std::cin.clear();
+        std::cin.ignore(INT_MAX, '\n');
         return false;
+    }
+    // is there enough memory?
+    if (storageSpace.isFull()) // check if storage is full
+        return true;
+    int blocksRequired = ceil((double)bytes / 1024.0 / BLOCK_SIZE);
+    if (blocksRequired > storageSpace.getTotalFreeBlocks())
+        return true;
+    // is the fileID valid?
+    if (fileLookUp.contains(fileID))
+    {
+        std::cout << "File already exists" << std::endl;
+        return true;
     }
 
     /* Step 3: save the file */
-    if (storageSpace.isFull()) // check if storage is full
-        return true;
-    auto listOfSpaces = storageSpace.findSpace(bytes, start);
+    auto listOfSpaces = storageSpace.findSpace(blocksRequired, start);
     // save file in fileLookUp
     fileLookUp.saveFile(fileID, listOfSpaces);
     // update the free storage
-    ///////////////
+    /////////////// deleteSpace(listOfSpaces); // mark those spaces as occupied
 
     std::cout << "File successfully saved." << std::endl;
     return false;
@@ -78,7 +95,7 @@ bool deleteFile(std::string fileID)
 
 bool readFile(std::string fileID)
 {
-    std::cout << "Printing the block(s) of memory where file \"" << fileID
+    std::cout << "Printing the block(s) of memory where \"" << fileID
               << "\" is stored..." << std::endl;
     fileLookUp.printFileAddress(fileID);
     return false;
@@ -103,6 +120,11 @@ int main()
         std::cout << "> ";
         std::getline(std::cin, line);
         std::stringstream lineStream(line);
+        if (lineStream.peek() == '\n' || lineStream.eof())
+        {
+            continue;
+        }
+
         lineStream >> cmd;
 
         /* Process user input and check if the command is valid */

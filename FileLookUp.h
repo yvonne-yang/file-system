@@ -2,7 +2,7 @@
  * Yvonne Yang
  * 01/28/2021
  * 
-/* 
+ * 
  * typedefs to make code more readable.
  * 
  * The fileLookUp stores information about each file in a hash table for
@@ -16,8 +16,8 @@
 #include <unordered_map>
 #include <vector>
 
-typedef std::pair<int, int> fragment_t;     // a start and an end index define\
-                                        // a storage fragment
+typedef std::pair<int, int> fragment_t;     // a start and an end index define
+                                            // a storage fragment
 typedef std::vector<fragment_t> fragList_t; // fragment list
 typedef std::string fileID_t;
 
@@ -28,7 +28,9 @@ class FileLookUp
 
 public:
     FileLookUp();
+    bool contains(fileID_t fileID);
     fragList_t findFile(fileID_t fileID);
     void saveFile(fileID_t fileID, fragList_t);
+    void deleteFile(fileID_t fileID);
     void printFileAddress(fileID_t fileID);
 };
