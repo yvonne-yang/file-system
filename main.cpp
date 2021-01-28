@@ -15,10 +15,12 @@
 #include <unordered_map>
 
 #include "StorageSpace.h"
+#include "FileLookUp.h"
 #include "globals.h"
 
 /* Global variables */
-std::unordered_map<std::string, std::vector<std::pair<int, int>>> fileLoopUp;
+static StorageSpace storageSpace;
+static FileLookUp fileLookUp;
 
 /* Functions */
 bool saveFile(std::string fileID, int bytes);
@@ -30,22 +32,55 @@ void help();
  * Prints a list of available spaces in the storage, and asks the user where  
  * they would like to store the file. The file with ID [fileID] that has [size]
  * number of bytes will then be saved into the file system.
+ * 
+ * @return True if error-storage is full.
  * */
 bool saveFile(std::string fileID, int bytes)
 {
+    /* Step 1: print list of available spaces */
+    storageSpace.printFreeSpace();
+
+    /* Step 2: ask for input on the interval of choice */
+    std::cout << "Enter the starting index of a fragment that you would like to write to (eg. 0):" << std::endl;
+    // basic validation
+    int start = 0;
+    std::cin >> start;
+    if (std::cin.fail())
+    {
+        std::cout << "Invalid input." << std::endl;
+        return false;
+    }
+    else if (!storageSpace.startOfFrag(start))
+    {
+        std::cout << "Invalid starting index." << std::endl;
+        return false;
+    }
+
+    /* Step 3: save the file */
+    if (storageSpace.isFull()) // check if storage is full
+        return true;
+    auto listOfSpaces = storageSpace.findSpace(bytes, start);
+    // save file in fileLookUp
+    fileLookUp.saveFile(fileID, listOfSpaces);
+    // update the free storage
+    ///////////////
+
     std::cout << "File successfully saved." << std::endl;
     return false;
 }
 
 bool deleteFile(std::string fileID)
 {
+
     std::cout << "File successfully deleted." << std::endl;
     return false;
 }
 
 bool readFile(std::string fileID)
 {
-    std::cout << "End of file." << std::endl;
+    std::cout << "Printing the block(s) of memory where file \"" << fileID
+              << "\" is stored..." << std::endl;
+    fileLookUp.printFileAddress(fileID);
     return false;
 }
 
@@ -83,7 +118,7 @@ int main()
             lineStream >> fileID;
             lineStream >> bytes;
 
-            if (lineStream.fail())
+            if (lineStream.fail()) // input validation
                 std::cout << "Invalid arguments. Usage: save [fileID] [size]." << std::endl;
             else
                 saveFile(fileID, bytes);
@@ -93,7 +128,7 @@ int main()
             std::string fileID;
             lineStream >> fileID;
 
-            if (lineStream.fail())
+            if (lineStream.fail()) // input validation
                 std::cout << "Invalid arguments. Usage: delete [fileID]" << std::endl;
             else
                 deleteFile(fileID);
@@ -103,7 +138,7 @@ int main()
             std::string fileID;
             lineStream >> fileID;
 
-            if (lineStream.fail())
+            if (lineStream.fail()) // input validation
                 std::cout << "Invalid arguments. Usage: read [fileID]" << std::endl;
             else
                 readFile(fileID);
@@ -112,7 +147,7 @@ int main()
             help();
         else
         {
-            if (!std::cin.eof())
+            if (!std::cin.eof()) // input validation
                 std::cout << "Error. Command not found. Enter \"help\" to see the help menu." << std::endl;
         }
     }
