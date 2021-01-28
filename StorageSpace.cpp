@@ -37,6 +37,7 @@ StorageSpace::StorageSpace()
     firstFreeBlock = 0;
     lastFreeBlock = NUM_BLOCKS - 1;
     totalFreeFragments = 1;
+    totalFreeBlocks = NUM_BLOCKS;
     full = false;
 
     listOfBlocks = new BlockInfo *[NUM_BLOCKS];
@@ -62,6 +63,7 @@ StorageSpace::~StorageSpace()
 
 /* Accessors */
 int StorageSpace::getTotalFragments() { return totalFreeFragments; }
+int StorageSpace::getTotalFreeBlocks() { return totalFreeBlocks; }
 bool StorageSpace::isFull() { return full; }
 bool StorageSpace::startOfFrag(int index) { return (listOfBlocks[index]->free && (listOfBlocks[index]->next > index)); }
 
@@ -69,15 +71,40 @@ bool StorageSpace::startOfFrag(int index) { return (listOfBlocks[index]->free &&
 bool StorageSpace::insertSpace(spaceList_t spaceList)
 {
 
+    // update variables: firstFreeBlock, lastFreeBlock, totalFreeFragments, totalFreeBlocks, full
     return false;
 }
 
-/* @return A list of spaces that can be occupied by a file of size bytes
- * (in bytes, obviously), starting from the index [start]. */
-spaceList_t StorageSpace::findSpace(int bytes, int start)
+/* 
+ * Given the number of blocks required by a file, compute where it should be 
+ * stored.
+ * 
+ * @return A list of spaces that can be occupied by the file, starting from the
+ * index [start]. */
+spaceList_t StorageSpace::findSpace(int blocks, int start)
 {
-    int blocks = (double)bytes / 1024.0 / BLOCK_SIZE;
     spaceList_t list;
+
+    while (blocks > 0) // search through the "linkedlist" of free fragments
+    {
+        int endOfFrag = listOfBlocks[start]->next;
+        int currentFragSize = endOfFrag - start;
+        if (blocks < currentFragSize) // remaining file fits into this fragment
+        {
+            fragment_t frag = std::make_pair(start, start + blocks - 1);
+            list.push_back(frag);
+            blocks = 0;
+        }
+        else // remaining file is bigger than the fragment
+        {
+            blocks -= currentFragSize;
+            list.push_back(std::make_pair(start, endOfFrag));
+            if (listOfBlocks[start]->next != lastFreeBlock)
+                start = listOfBlocks[endOfFrag]->next; // go to the next free fragment
+            else                                       // reached the end
+                start = firstFreeBlock;
+        }
+    }
 
     return list;
 }
@@ -86,7 +113,7 @@ spaceList_t StorageSpace::findSpace(int bytes, int start)
 bool StorageSpace::deleteSpace(spaceList_t spaceList)
 {
 
-    // update variables: firstFreeBlock, lastFreeBlock, totalFree, full
+    // update variables: firstFreeBlock, lastFreeBlock, totalFreeFragments, totalFreeBlocks, full
     return false;
 }
 

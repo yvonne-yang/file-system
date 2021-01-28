@@ -41,7 +41,7 @@ class StorageSpace
         BlockInfo(bool, int, int);
     };
 
-    int firstFreeBlock, lastFreeBlock, totalFreeFragments;
+    int firstFreeBlock, lastFreeBlock, totalFreeFragments, totalFreeBlocks;
     bool full;
     BlockInfo **listOfBlocks; // array of pointers to BlockInfo
 
@@ -52,6 +52,7 @@ public:
     spaceList_t findSpace(int bytes, int start);
     bool deleteSpace(spaceList_t);
     bool startOfFrag(int index);
+    int getTotalFreeBlocks();
     int getTotalFragments();
     bool isFull();
     void printFreeSpace();
