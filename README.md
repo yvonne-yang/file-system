@@ -5,7 +5,7 @@ Given the storage size (MiB), X, and the size of each block of memory (KiB), Y, 
 
 (As of now, the default storage size is set to 1MiB and the block size is 1KiB.)  
 
-## Explanation of Data structures
+## Explanation of Algorithm and Data structures
 This implementation uses a hash table for file address lookup and a custom made data structure to keep track of storage space. The problem really has two subproblems: managing free space and managing files. Thus the two data structures.  
 
 The FileLookUp class is basically a good ol' hash table. The keys are file IDs and the values are their addresses. This explains the O(1) for the read operation.  
