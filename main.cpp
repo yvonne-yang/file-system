@@ -50,7 +50,12 @@ bool saveFile(std::string fileID, int bytes)
         std::cout << "File already exists." << std::endl;
         return true;
     }
-
+    int blocksRequired = ceil((double)bytes / 1024.0 / BLOCK_SIZE);
+    if (blocksRequired > storageSpace.getTotalFreeBlocks()) // is there enough memory?
+    {
+        std::cout << "File size too big." << std::endl;
+        return true;
+    }
     /* Step 1: print list of available spaces */
     std::cout << "Current free memory blocks: " << std::endl;
     storageSpace.printFreeSpace();
@@ -75,13 +80,6 @@ bool saveFile(std::string fileID, int bytes)
         std::cin.clear();
         std::cin.ignore(INT_MAX, '\n');
         return false;
-    }
-    // is there enough memory?
-    int blocksRequired = ceil((double)bytes / 1024.0 / BLOCK_SIZE);
-    if (blocksRequired > storageSpace.getTotalFreeBlocks())
-    {
-        std::cout << "File size too big." << std::endl;
-        return true;
     }
 
     /* Step 3: save the file */

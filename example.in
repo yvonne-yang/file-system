@@ -4,4 +4,8 @@ save f2 1
 20
 read f1
 read f2
+delete f1
 save f3 409600 
+0
+read f3
+exit

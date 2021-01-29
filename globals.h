@@ -8,8 +8,8 @@
 
 #pragma once
 
-#define DEV true // debugging messages (true-on, false-off)
-#define NULLI -1 // define a negative number to be the "nullpointer" value since valid indices are all positive
+#define DEV false // debugging messages (true-on, false-off)
+#define NULLI -1  // define a negative number to be the "nullpointer" value since valid indices are all positive
 
 const int STORAGE = 1024; // in KiB
 const int BLOCK_SIZE = 1; // in KiB

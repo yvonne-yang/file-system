@@ -149,15 +149,14 @@ bool StorageSpace::freeUpSpace(fragList_t fragList)
 
         if (fileFragStart < firstFreeBlock) // fileFrag is to the left of all free fragments
         {
-            if (fileFragStart == 0 || !listOfBlocks[fileFragStart - 1]->free) // surrounded by other files on both sides
+            if (!listOfBlocks[fileFragEnd + 1]->free) // surrounded by other files on both sides
             {
                 int rightFragStart = firstFreeBlock;
-
                 // connect left end of the right fragment with the right end of this file fragment
                 listOfBlocks[rightFragStart]->prev = fileFragEnd;
                 listOfBlocks[fileFragEnd]->next = rightFragStart;
                 // make this file fragment a free fragment
-                listOfBlocks[rightFragStart]->free = true;
+                listOfBlocks[fileFragStart]->free = true;
                 listOfBlocks[fileFragEnd]->free = true;
 
                 firstFreeBlock = fileFragStart; // update
@@ -178,7 +177,7 @@ bool StorageSpace::freeUpSpace(fragList_t fragList)
         else if (fileFragEnd > lastFreeBlock) // fileFrag is to the right of all free fragments
         {
 
-            if (fileFragEnd == NUM_BLOCKS - 1 || !listOfBlocks[fileFragEnd + 1]->free) // surrounded by other files on both sides
+            if (!listOfBlocks[fileFragStart - 1]->free) // surrounded by other files on both sides
             {
                 int leftFragEnd = lastFreeBlock;
 
@@ -186,7 +185,7 @@ bool StorageSpace::freeUpSpace(fragList_t fragList)
                 listOfBlocks[leftFragEnd]->next = fileFragStart;
                 listOfBlocks[fileFragStart]->prev = leftFragEnd;
                 // make this fragment free
-                listOfBlocks[leftFragEnd]->free = true;
+                listOfBlocks[fileFragEnd]->free = true;
                 listOfBlocks[fileFragStart]->free = true;
 
                 lastFreeBlock = fileFragEnd; // update
@@ -362,7 +361,7 @@ bool StorageSpace::occupySpace(fragList_t fragList)
         listOfBlocks[NUM_BLOCKS - 1]->prev = newFreeFragStart;
         // connect file fragment
         listOfBlocks[fileFragEnd]->prev = fileFragStart;
-        listOfBlocks[fileFragEnd]->next = fileFragEnd;
+        listOfBlocks[fileFragStart]->next = fileFragEnd;
 
         totalFreeBlocks -= fileFragEnd - fileFragStart + 1;
         firstFreeBlock = newFreeFragStart;
