@@ -5,6 +5,7 @@ Given the storage size (MiB), X, and the size of each block of memory (KiB), Y, 
 
 (As of now, the default storage size is set to 1MiB and the block size is 1KiB.)  
 
+## Explanation of Data structures
 This implementation uses a hash table for file address lookup and a custom made data structure to keep track of storage space. The problem really has two subproblems: managing free space and managing files. Thus the two data structures.  
 
 The FileLookUp class is basically a good ol' hash table. The keys are file IDs and the values are their addresses. This explains the O(1) for the read operation.  
@@ -13,7 +14,6 @@ The StorageSpace class is an ingenious creation tailored to solve this problem. 
 
 Perhaps an example would be clearer. 
 
-# Example session
 The number of memory blocks is X/Y. This is also the size of our linked-array-list. Each block can be represented by 3 things, a link to the previous node, a link to the next node, and whether it is free (F). We write this triple as (prev, free, next). As the program initializes, the storage linked-array-list looks like:
 |index|0|1|2|3...1022|1023|
 |info|(,F,1023)|(,,)|(,,)|(,,)...(,,)|(0,F,)|
@@ -43,6 +43,53 @@ If we want to store "f3" which takes up 40 blocks at index 0, fragmentation is n
 ## To run
 If you'd like to compile the project and see it work, download the source code and use `[cpp-compiler] main.cpp StorageSpace.cpp FileLookUp.cpp -o file-system.exe` to generate the executable.
 Run the executable and use the console for input. Follow instructions in the help menu.
+
+## Example session
+Use the "example.in" as input.
+```bash
+Welcome to Yvonne's file system.
+
+Below are the possible commands.
+Enter "help" to see this menu again.
+
+save [fileID] [size]     Saves the file with ID [fileID] and [size] in bytes in the file system.
+delete [fileID]          Deletes the file with ID [fileID].
+read [fileID]            Prints the blocks of memory taken up by the file with ID [fileID].
+exit                     Exits the program.
+> save f1 20480
+Current free memory blocks:
+0..1023
+Enter the starting index of a free fragment that you would like to write to (eg. 27 for 27..45):
+> 0
+File successfully saved.
+> > save f2 1
+Current free memory blocks:
+20..1023
+Enter the starting index of a free fragment that you would like to write to (eg. 27 for 27..45):
+> 20
+File successfully saved.
+> > read f1
+Printing the memory blocks that store "f1"...
+0..19
+> read f2
+Printing the memory blocks that store "f2"...
+20..20
+> delete f1
+File successfully deleted.
+> save f3 409600
+Current free memory blocks:
+0..19
+21..1023
+Enter the starting index of a free fragment that you would like to write to (eg. 27 for 27..45):
+> 0
+File successfully saved.
+> > read f3
+Printing the memory blocks that store "f3"...
+0..19
+21..400
+> exit
+Thank you for using Yvonne's file system.
+```
 
 ## Features that can be added
 - Ask user to set X and Y
