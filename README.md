@@ -16,12 +16,14 @@ Perhaps an example would be clearer.
 
 The number of memory blocks is X/Y. This is also the size of our linked-array-list. Each block can be represented by 3 things, a link to the previous node, a link to the next node, and whether it is free (F). We write this triple as (prev, free, next). As the program initializes, the storage linked-array-list looks like:
 |index|0|1|2|3...1022|1023|
+|-|-|-|-|-|-|
 |info|(,F,1023)|(,,)|(,,)|(,,)...(,,)|(0,F,)|
 
 Note how we only store information in the first and last block. More on this later. We will abbreviate elements that are "null" to save space.  
 
 Let's store a file "f1" that takes up 20 blocks. To avoid fragmentation, the program will only allow you to store it at the front of the storage. Now we have:
 |index|0|1..18|19|20..1022|1023|
+|-|-|-|-|-|-|
 |info|(,,19)|(,,)..(,,)|(0,,)|(,F,1023)|(,,)..(,,)|(20,F,)|
 
 Define a fragment as a contiguous part of the storage that belong
@@ -29,14 +31,17 @@ to a single file, or is empty. The fragment that belongs to "f1" forms a linked 
 
 Let's store one more file. "f2" takes up 1 block.
 |index|0|1..18|19|20|21..1022|1023|
+|-|-|-|-|-|-|-|
 |info|(,,19)|(,,)..(,,)|(0,,)|(20,,20)|(,F,1023)|(,,)..(,,)|(21,F,)|
 
 Now we wish to delete "f1". Note how we only have to change information in three links. Also observe how all free fragments are chained into one list so that we can easily print all free spaces.
 |index|0|1..18|19|20|21..1022|1023|
+|-|-|-|-|-|-|-|
 |info|(,F,19)|(,,)..(,,)|(0,F,21)|(20,,20)|(19,F,1023)|(,,)..(,,)|(21,F,)|
 
 If we want to store "f3" which takes up 40 blocks at index 0, fragmentation is now unavoidable. Still, we only have to modify a few pointers to reflect the new storage status.  
 |index|0|1..18|19|20|21|22...40|41|42|43..1022|1023|
+|-|-|-|-|-|-|-|-|-|-|-|
 |info|(,,19)|(,,)..(,,)|(0,,)|(20,,20)|(,,41)|(,,)..(,,)|(21,,)|(,F,1023)|(,,)..(,,)|(42,F,)|
 |notes|f3|f3|f3|f2|f3|f3|f3|free|free|free|
 
@@ -46,7 +51,7 @@ Run the executable and use the console for input. Follow instructions in the hel
 
 ## Example session
 Use the "example.in" as input.
-```bash
+```cmd
 Welcome to Yvonne's file system.
 
 Below are the possible commands.
