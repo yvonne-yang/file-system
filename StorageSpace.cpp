@@ -11,7 +11,6 @@
  * pointers to the index of other blocks. This helps divide the memory into
  * free/occupied sections and chains similar sections for easier access.
  * 
- * TODO: insertSpace, findSpace, occupySpace 
  * */
 #include <iostream>
 
@@ -75,11 +74,45 @@ StorageSpace::~StorageSpace()
 int StorageSpace::getTotalFragments() { return totalFreeFragments; }
 int StorageSpace::getTotalFreeBlocks() { return totalFreeBlocks; }
 bool StorageSpace::isFull() { return full; }
+
+/*
+ * A safe way to validate the block index input by the user while saving
+ * a file.
+ * 
+ * @return Whether a block at [index] is the start of a free fragment
+ */
 bool StorageSpace::startOfFrag(int index)
 {
     if (index < 0 || index >= NUM_BLOCKS) // index out of bounds
         return false;
     return (listOfBlocks[index]->free && (listOfBlocks[index]->next > index));
+}
+
+/* 
+ * A more dangerous alternative to the isFragStart(index) input validation,
+ * but offers the user more control, as they can choose whichever block in the
+ * storage.
+ * 
+ * @return Whether a block at [index] is free.
+ * */
+bool StorageSpace::isFree(int index)
+{
+    if (index < 0 || index >= NUM_BLOCKS) // index out of bounds
+        return false;
+    if (totalFreeBlocks == NUM_BLOCKS) // all empty
+        return true;
+    int start = firstFreeBlock;
+    while (listOfBlocks[start]->next != lastFreeBlock)
+    {
+        if (index > start && index < listOfBlocks[start]->next)
+        {
+            return true;
+            ;
+        }
+        if (start > index)
+            break;
+    }
+    return false;
 }
 
 /* 
@@ -96,7 +129,7 @@ bool StorageSpace::freeUpSpace(fragList_t fragList)
     // handle special case: one huge file that takes up the entire storage
     if (isFull() && fragList.begin()->first == 0 && fragList.begin()->second == NUM_BLOCKS - 1) // releasing all blocks! wheee
     {
-        //return to initial state
+        // return to initial state
         listOfBlocks[0]->next = NUM_BLOCKS - 1; // link the first block to the last
         listOfBlocks[NUM_BLOCKS - 1]->prev = 0; // and the last block to the first
         listOfBlocks[0]->free = true;           // only mark the start and end of the fragment
@@ -116,27 +149,28 @@ bool StorageSpace::freeUpSpace(fragList_t fragList)
 
         if (fileFragStart < firstFreeBlock) // fileFrag is to the left of all free fragments
         {
-            if ((fileFragStart == 0 || !listOfBlocks[fileFragStart - 1]->free) && fileFragEnd < NUM_BLOCKS && !listOfBlocks[fileFragEnd + 1]->free) // surrounded by other files on both sides
+            if (fileFragStart == 0 || !listOfBlocks[fileFragStart - 1]->free) // surrounded by other files on both sides
             {
                 int rightFragStart = firstFreeBlock;
-                int rightFragEnd = listOfBlocks[rightFragStart]->next;
 
-                // connect right end of the right fragment with the left end of this file fragment
-                listOfBlocks[rightFragEnd]->prev = fileFragStart;
-                listOfBlocks[fileFragStart]->next = rightFragEnd;
-                // reset the rest
-                listOfBlocks[rightFragStart]->reset();
-                listOfBlocks[fileFragEnd]->reset();
+                // connect left end of the right fragment with the right end of this file fragment
+                listOfBlocks[rightFragStart]->prev = fileFragEnd;
+                listOfBlocks[fileFragEnd]->next = rightFragStart;
+                // make this file fragment a free fragment
+                listOfBlocks[rightFragStart]->free = true;
+                listOfBlocks[fileFragEnd]->free = true;
 
                 firstFreeBlock = fileFragStart; // update
                 totalFreeFragments++;
             }
-            else // file is adjacent to a free frag
+            else // file is adjacent to a free frag on the right
             {
+                listOfBlocks[fileFragStart]->free = true;
                 listOfBlocks[fileFragStart]->next = listOfBlocks[firstFreeBlock]->next;
                 listOfBlocks[listOfBlocks[firstFreeBlock]->next]->prev = fileFragStart;
                 listOfBlocks[firstFreeBlock]->reset();
-                listOfBlocks[fileFragEnd]->reset();
+                if (fileFragEnd != fileFragStart) // if file takes up more than one block
+                    listOfBlocks[fileFragEnd]->reset();
 
                 firstFreeBlock = fileFragStart;
             }
@@ -144,18 +178,16 @@ bool StorageSpace::freeUpSpace(fragList_t fragList)
         else if (fileFragEnd > lastFreeBlock) // fileFrag is to the right of all free fragments
         {
 
-            if (fileFragStart > 0 && !listOfBlocks[fileFragStart - 1]->free && (fileFragEnd == NUM_BLOCKS - 1 || !listOfBlocks[fileFragEnd + 1]->free)) // surrounded by other files on both sides
+            if (fileFragEnd == NUM_BLOCKS - 1 || !listOfBlocks[fileFragEnd + 1]->free) // surrounded by other files on both sides
             {
-
                 int leftFragEnd = lastFreeBlock;
-                int leftFragStart = listOfBlocks[leftFragEnd]->prev;
 
-                // connect left end of the left fragment with the right end of this file fragment
-                listOfBlocks[leftFragStart]->next = fileFragEnd;
-                listOfBlocks[fileFragEnd]->prev = leftFragStart;
-                // reset the rest
-                listOfBlocks[leftFragEnd]->reset();
-                listOfBlocks[fileFragStart]->reset();
+                // connect right end of the left fragment with the left end of this file fragment
+                listOfBlocks[leftFragEnd]->next = fileFragStart;
+                listOfBlocks[fileFragStart]->prev = leftFragEnd;
+                // make this fragment free
+                listOfBlocks[leftFragEnd]->free = true;
+                listOfBlocks[fileFragStart]->free = true;
 
                 lastFreeBlock = fileFragEnd; // update
                 totalFreeFragments++;
@@ -165,12 +197,13 @@ bool StorageSpace::freeUpSpace(fragList_t fragList)
                 listOfBlocks[fileFragEnd]->prev = listOfBlocks[lastFreeBlock]->prev;
                 listOfBlocks[listOfBlocks[lastFreeBlock]->prev]->next = fileFragEnd;
                 listOfBlocks[lastFreeBlock]->reset();
-                listOfBlocks[fileFragStart]->reset();
+                if (fileFragEnd != fileFragStart) // if file takes up more than one block
+                    listOfBlocks[fileFragStart]->reset();
 
                 lastFreeBlock = fileFragEnd;
             }
         }
-        else
+        else // file fragment is somewhere in between two free spaces
         {
             if (fileFragStart > 0 && !listOfBlocks[fileFragStart - 1]->free && fileFragEnd < NUM_BLOCKS && !listOfBlocks[fileFragEnd + 1]->free) // surrounded by other files on both sides
             {
@@ -179,9 +212,7 @@ bool StorageSpace::freeUpSpace(fragList_t fragList)
                 {
                     leftFragEnd = listOfBlocks[leftFragEnd]->prev - 1;
                 }
-                int leftFragStart = listOfBlocks[leftFragEnd]->prev;
                 int rightFragStart = listOfBlocks[leftFragEnd]->next;
-                int rightFragEnd = listOfBlocks[rightFragStart]->next;
 
                 // insert into linked list
                 listOfBlocks[fileFragStart]->free = true;
@@ -201,13 +232,13 @@ bool StorageSpace::freeUpSpace(fragList_t fragList)
                     rightFragStart = listOfBlocks[rightFragStart]->prev - 1;
                 }
                 int leftFragEnd = listOfBlocks[rightFragStart]->prev;
-                int leftFragStart = listOfBlocks[leftFragEnd]->prev;
                 // reorganize pointers
                 listOfBlocks[fileFragStart]->free = true;
                 listOfBlocks[fileFragStart]->prev = leftFragEnd;
                 listOfBlocks[leftFragEnd]->next = fileFragStart;
                 listOfBlocks[rightFragStart]->reset();
-                listOfBlocks[fileFragEnd]->reset();
+                if (fileFragEnd != fileFragStart) // if file takes up more than one block
+                    listOfBlocks[fileFragEnd]->reset();
             }
             else if (fileFragStart > 0 && listOfBlocks[fileFragStart - 1]->free && fileFragEnd < NUM_BLOCKS && !listOfBlocks[fileFragEnd + 1]->free) // space on the left
             {
@@ -217,13 +248,13 @@ bool StorageSpace::freeUpSpace(fragList_t fragList)
                     leftFragEnd = listOfBlocks[leftFragEnd]->prev - 1;
                 }
                 int rightFragStart = listOfBlocks[leftFragEnd]->next;
-                int rightFragEnd = listOfBlocks[rightFragStart]->next;
                 // reorganize pointers
                 listOfBlocks[fileFragEnd]->free = true;
                 listOfBlocks[fileFragEnd]->next = rightFragStart;
                 listOfBlocks[rightFragStart]->prev = fileFragEnd;
                 listOfBlocks[leftFragEnd]->reset();
-                listOfBlocks[fileFragStart]->reset()
+                if (fileFragEnd != fileFragStart) // if file takes up more than one block
+                    listOfBlocks[fileFragStart]->reset();
             }
             else // surrounded by spaces
             {
@@ -249,7 +280,7 @@ bool StorageSpace::freeUpSpace(fragList_t fragList)
         totalFreeBlocks += fileFragEnd - fileFragStart + 1;
 
         if (DEV) // debugging
-            std::cout << "free fragments: " << totalFreeFragments << "free blocks: " << totalFreeBlocks << std::endl;
+            std::cout << "free fragments: " << totalFreeFragments << " free blocks: " << totalFreeBlocks << std::endl;
     }
 
     if (totalFreeBlocks == 0)
@@ -271,7 +302,7 @@ fragList_t StorageSpace::findSpace(int blocks, int start)
     while (blocks > 0) // search through the "linkedlist" of free fragments
     {
         int endOfFrag = listOfBlocks[start]->next;
-        int currentFragSize = endOfFrag - start;
+        int currentFragSize = endOfFrag - start + 1;
         if (blocks < currentFragSize) // remaining file fits into this fragment
         {
             fragment_t frag(start, start + blocks - 1);
@@ -283,12 +314,24 @@ fragList_t StorageSpace::findSpace(int blocks, int start)
             blocks -= currentFragSize;
             list.push_back(std::make_pair(start, endOfFrag));
             if (listOfBlocks[start]->next != lastFreeBlock)
+            {
                 start = listOfBlocks[endOfFrag]->next; // go to the next free fragment
-            else                                       // reached the end
+            }
+            else // reached the end, wrap around
+            {
                 start = firstFreeBlock;
+            }
         }
     }
 
+    /*
+    if (DEV) // debug
+    {
+        for (auto it : list)
+            std::cout << it.first << ".." << it.second << ", ";
+        std::cout << std::endl;
+    }
+    */
     return list;
 }
 
@@ -306,8 +349,27 @@ bool StorageSpace::occupySpace(fragList_t fragList)
         return true;
     }
 
-    // handle special case: one huge file that takes up the entire storage
-    if (totalFreeFragments == 1 && (fragList.begin()->second - fragList.begin()->first + 1 == NUM_BLOCKS)) // one file to rule 'em all
+    // handle file save into an empty storage (where file size is smaller)
+    if (totalFreeBlocks == NUM_BLOCKS)
+    {
+        int fileFragStart = fragList.begin()->first;
+        int fileFragEnd = fragList.begin()->second;
+        // can only insert at index 0
+        listOfBlocks[0]->reset();
+        int newFreeFragStart = fileFragEnd - fileFragStart + 1;
+        listOfBlocks[newFreeFragStart]->free = true;
+        listOfBlocks[newFreeFragStart]->next = NUM_BLOCKS - 1;
+        listOfBlocks[NUM_BLOCKS - 1]->prev = newFreeFragStart;
+        // connect file fragment
+        listOfBlocks[fileFragEnd]->prev = fileFragStart;
+        listOfBlocks[fileFragEnd]->next = fileFragEnd;
+
+        firstFreeBlock = newFreeFragStart;
+        return false;
+    }
+
+    // handle special case: one huge file that takes up the entire remaining storage
+    if (totalFreeFragments == 1 && (fragList.begin()->second == lastFreeBlock && fragList.begin()->first == firstFreeBlock)) // one file to rule 'em all
     {
         // first and last block are connected already, just set them to occupied
         listOfBlocks[0]->free = false;
@@ -327,12 +389,13 @@ bool StorageSpace::occupySpace(fragList_t fragList)
     {
         int fileFragStart = fileFrag.first;
         int fileFragEnd = fileFrag.second;
-
-        // search for the surrounding free fragment
+        int freeFragStart = fileFragStart;
+        int freeFragEnd = listOfBlocks[freeFragStart]->next;
+        /* for use with the isFree() options: search for the surrounding free fragment
         int freeFragStart = NULLI, freeFragEnd = NULLI;
-        if (fileFragStart != firstFreeBlock) // search left
+        if (fileFragStart >= firstFreeBlock) // search left
         {
-            for (int i = fileFragStart; i >= 0; i--)
+            for (int i = fileFragStart; i >= firstFreeBlock; i--)
             {
                 if (listOfBlocks[i]->free)
                 {
@@ -344,7 +407,7 @@ bool StorageSpace::occupySpace(fragList_t fragList)
         }
         else // search right
         {
-            for (int i = fileFragEnd; i < NUM_BLOCKS; i++)
+            for (int i = fileFragEnd; i <= lastFreeBlock; i++)
             {
                 if (listOfBlocks[i]->free)
                 {
@@ -354,6 +417,9 @@ bool StorageSpace::occupySpace(fragList_t fragList)
                 }
             }
         }
+        */
+        if (DEV && freeFragStart == NULLI && freeFragEnd == NULLI) // no fragments??
+            std::cout << "Internal error, what's going on??" << std::endl;
 
         // reorganize pointers
         if (fileFragStart == firstFreeBlock) // surrounding free fragment is the first free space
@@ -369,6 +435,8 @@ bool StorageSpace::occupySpace(fragList_t fragList)
 
                 listOfBlocks[freeFragStart]->free = false; // mark as occupied
                 listOfBlocks[freeFragEnd]->free = false;
+
+                firstFreeBlock = nextFreeFragStart;
             }
             else // file fragment takes up the first section of the free fragment
             {
@@ -386,6 +454,7 @@ bool StorageSpace::occupySpace(fragList_t fragList)
 
                 firstFreeBlock = newFreeFragStart; // update
             }
+            return false;
         }
         else if (fileFragEnd == lastFreeBlock) // surrounding free fragment is the last free space
         {
@@ -455,7 +524,7 @@ bool StorageSpace::occupySpace(fragList_t fragList)
 
         /////// debug
         if (DEV)
-            std::cout << "free fragments: " << totalFreeFragments << "free blocks: " << totalFreeBlocks << std::endl;
+            std::cout << "free fragments: " << totalFreeFragments << " free blocks: " << totalFreeBlocks << std::endl;
     }
     // update variables: firstFreeBlock, lastFreeBlock, totalFreeFragments, totalFreeBlocks, full
     return false;

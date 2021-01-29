@@ -40,12 +40,23 @@ void help();
  * */
 bool saveFile(std::string fileID, int bytes)
 {
+    if (storageSpace.isFull()) // check if storage is full
+    {
+        std::cout << "Error. Storage is full." << std::endl;
+        return true;
+    }
+    if (fileLookUp.contains(fileID)) // is the fileID valid?
+    {
+        std::cout << "File already exists." << std::endl;
+        return true;
+    }
+
     /* Step 1: print list of available spaces */
     std::cout << "Current free memory blocks: " << std::endl;
     storageSpace.printFreeSpace();
 
     /* Step 2: ask for input on the interval of choice */
-    std::cout << "Enter the starting index of a free fragment that you would like to write to (eg. 27 for 27..100):" << std::endl;
+    std::cout << "Enter the starting index of a free fragment that you would like to write to (eg. 27 for 27..45):" << std::endl;
     std::cout << "> ";
     // basic input validation
     int start = 0;
@@ -57,7 +68,8 @@ bool saveFile(std::string fileID, int bytes)
         std::cin.ignore(INT_MAX, '\n');
         return false;
     }
-    else if (!storageSpace.startOfFrag(start)) // not a start of any fragment
+    /****** validate the chosen index. Note that a less safe option is the isFree(int) method in StorageSpace ********/
+    else if (!storageSpace.startOfFrag(start))
     {
         std::cout << "Invalid starting index." << std::endl;
         std::cin.clear();
@@ -65,15 +77,10 @@ bool saveFile(std::string fileID, int bytes)
         return false;
     }
     // is there enough memory?
-    if (storageSpace.isFull()) // check if storage is full
-        return true;
     int blocksRequired = ceil((double)bytes / 1024.0 / BLOCK_SIZE);
     if (blocksRequired > storageSpace.getTotalFreeBlocks())
-        return true;
-    // is the fileID valid?
-    if (fileLookUp.contains(fileID))
     {
-        std::cout << "File already exists" << std::endl;
+        std::cout << "File size too big." << std::endl;
         return true;
     }
 
@@ -100,8 +107,8 @@ bool deleteFile(std::string fileID)
 
 bool readFile(std::string fileID)
 {
-    std::cout << "Printing the block(s) of memory where \"" << fileID
-              << "\" is stored..." << std::endl;
+    std::cout << "Printing the memory blocks that store \"" << fileID
+              << "\"..." << std::endl;
     fileLookUp.printFileAddress(fileID);
     return false;
 }
@@ -185,7 +192,7 @@ int main()
 /* Helper function to print the list of possible commands.*/
 void help()
 {
-    std::cout << "Below are the possible commands.\n Enter \"help\" to see this menu again." << std::endl;
+    std::cout << "Below are the possible commands.\nEnter \"help\" to see this menu again." << std::endl;
     std::cout << std::endl;
     std::cout << std::setw(25) << std::left << "save [fileID] [size]";
     std::cout << "Saves the file with ID [fileID] and [size] in bytes in the file system. " << std::endl;

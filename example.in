@@ -1,0 +1,7 @@
+save f1 20480
+0
+save f2 1
+20
+read f1
+read f2
+save f3 409600 

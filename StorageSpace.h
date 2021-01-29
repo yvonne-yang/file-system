@@ -51,6 +51,7 @@ public:
     bool freeUpSpace(fragList_t);
     fragList_t findSpace(int bytes, int start);
     bool occupySpace(fragList_t);
+    bool isFree(int index);
     bool startOfFrag(int index);
     int getTotalFreeBlocks();
     int getTotalFragments();

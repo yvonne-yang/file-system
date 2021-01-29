@@ -29,6 +29,11 @@ bool FileLookUp::contains(fileID_t fileID)
 fragList_t FileLookUp::findFile(fileID_t fileID)
 {
     auto file = table.find(fileID);
+    if (file == table.end())
+    {
+        std::cout << "Error. File not found." << std::endl;
+        return {};
+    }
     return file->second;
 }
 
@@ -53,6 +58,8 @@ fragList_t FileLookUp::deleteFile(fileID_t fileID)
 void FileLookUp::printFileAddress(fileID_t fileID)
 {
     auto fragList = findFile(fileID);
+    if (fragList.empty()) // file not found error
+        return;
     for (auto frag : fragList)
     {
         std::cout << frag.first << ".." << frag.second << std::endl;
