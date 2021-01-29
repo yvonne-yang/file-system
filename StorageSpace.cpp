@@ -364,6 +364,7 @@ bool StorageSpace::occupySpace(fragList_t fragList)
         listOfBlocks[fileFragEnd]->prev = fileFragStart;
         listOfBlocks[fileFragEnd]->next = fileFragEnd;
 
+        totalFreeBlocks -= fileFragEnd - fileFragStart + 1;
         firstFreeBlock = newFreeFragStart;
         return false;
     }
@@ -372,8 +373,8 @@ bool StorageSpace::occupySpace(fragList_t fragList)
     if (totalFreeFragments == 1 && (fragList.begin()->second == lastFreeBlock && fragList.begin()->first == firstFreeBlock)) // one file to rule 'em all
     {
         // first and last block are connected already, just set them to occupied
-        listOfBlocks[0]->free = false;
-        listOfBlocks[NUM_BLOCKS]->free = false;
+        listOfBlocks[firstFreeBlock]->free = false;
+        listOfBlocks[lastFreeBlock]->free = false;
 
         // update database info
         full = true;
@@ -442,6 +443,7 @@ bool StorageSpace::occupySpace(fragList_t fragList)
             {
                 // form the new free fragment
                 int newFreeFragStart = fileFragEnd + 1;
+
                 listOfBlocks[newFreeFragStart]->free = true;
                 listOfBlocks[newFreeFragStart]->next = freeFragEnd;
                 listOfBlocks[freeFragEnd]->prev = newFreeFragStart;
@@ -521,11 +523,10 @@ bool StorageSpace::occupySpace(fragList_t fragList)
         }
 
         totalFreeBlocks -= fileFragEnd - fileFragStart + 1;
-
-        /////// debug
-        if (DEV)
-            std::cout << "free fragments: " << totalFreeFragments << " free blocks: " << totalFreeBlocks << std::endl;
     }
+    /////// debug
+    if (DEV)
+        std::cout << "free fragments: " << totalFreeFragments << " free blocks: " << totalFreeBlocks << std::endl;
     // update variables: firstFreeBlock, lastFreeBlock, totalFreeFragments, totalFreeBlocks, full
     return false;
 }
